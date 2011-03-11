@@ -2,6 +2,9 @@
 " Maintainer: Jezreel Ng <jezreel@gmail.com>
 " Version: 1.0
 " License: This file is placed in the public domain.
+"
+" Patched away the SimpleDiff functionality. It autocreated an empty buffer for
+" me whenever I ran :Extradite! . I dont want this, I use dv and dh instead.
 
 if exists('g:loaded_extradite')
     finish
@@ -179,7 +182,7 @@ endfunction
 function! s:ExtraditeDiffToggle() abort
   if !exists('b:extradite_simplediff_bufnr') || b:extradite_simplediff_bufnr == -1
     augroup extradite
-      autocmd CursorMoved <buffer> call s:SimpleFileDiff(s:ExtraditePath('~1'), s:ExtraditePath())
+      "autocmd CursorMoved <buffer> call s:SimpleFileDiff(s:ExtraditePath('~1'), s:ExtraditePath())
       " vim seems to get confused if we jump around buffers during a CursorMoved event. Moving the cursor
       " around periodically helps vim figure out where it should really be.
       autocmd CursorHold <buffer>  normal! lh
@@ -203,36 +206,38 @@ function! s:SimpleFileDiff(a,b) abort
   wincmd p
 endfunction
 
+
 " Does a git diff of commits a and b. Will create one simplediff-buffer that is
 " unique wrt the buffer that it is invoked from.
-function! s:SimpleDiff(a,b) abort
-
-  if !exists('b:extradite_simplediff_bufnr') || b:extradite_simplediff_bufnr == -1
-    belowright split
-    enew!
-    let bufnr = bufnr('')
-    wincmd p
-    let b:extradite_simplediff_bufnr = bufnr
-  endif
-
-  let win = bufwinnr(b:extradite_simplediff_bufnr)
-  exe win.'wincmd w'
-
-  " check if we have generated this diff already, to reduce unnecessary shell requests
-  if exists('b:files') && b:files['a'] == a:a && b:files['b'] == a:b
-    wincmd p
-    return
-  endif
-
-  setlocal modifiable
-    silent! %delete _
-    let diff = system('git diff '.a:a.' '.a:b)
-    silent put = diff
-  setlocal ft=diff buftype=nofile nomodifiable
-
-  let b:files = { 'a': a:a, 'b': a:b }
-  wincmd p
-
-endfunction
+"function! s:SimpleDiff(a,b) abort
+"
+"  if !exists('b:extradite_simplediff_bufnr') || b:extradite_simplediff_bufnr == -1
+"    belowright split
+"    enew!
+"    let bufnr = bufnr('')
+"    wincmd p
+"    let b:extradite_simplediff_bufnr = bufnr
+"  endif
+"
+"  let win = bufwinnr(b:extradite_simplediff_bufnr)
+"  exe win.'wincmd w'
+"
+"  " check if we have generated this diff already, to reduce unnecessary shell requests
+"  if exists('b:files') && b:files['a'] == a:a && b:files['b'] == a:b
+"    wincmd p
+"    return
+"  endif
+"
+"  setlocal modifiable
+"    silent! %delete _
+"    let diff = system('git diff '.a:a.' '.a:b)
+"    silent put = diff
+"  "setlocal ft=diff buftype=nofile nomodifiable
+"  setlocal ft=diff nomodifiable
+"
+"  let b:files = { 'a': a:a, 'b': a:b }
+"  wincmd p
+"
+"endfunction
 
 " vim:set ft=vim ts=8 sw=2 sts=2 et
